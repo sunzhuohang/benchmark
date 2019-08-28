@@ -4,5 +4,6 @@ command
 
 ./benchmark.sh [go-ycsb路径] [pd的地址]
 
-go-ycsb的路径。 ../bin/go-ycsb
+go-ycsb的路径。 ../bin/go-ycsb 
+
 pd的地址 eg. 127.0.0.1:38800
