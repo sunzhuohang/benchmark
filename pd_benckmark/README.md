@@ -2,7 +2,7 @@
 
 command
 
-./benchmark.sh <option1> <option2>
+./benchmark.sh [go-ycsb路径] [pd的地址]
 
-<option1> go-ycsb的路径。 ../bin/go-ycsb
-<option2> pd的地址 eg. 127.0.0.1:38800
+go-ycsb的路径。 ../bin/go-ycsb
+pd的地址 eg. 127.0.0.1:38800
