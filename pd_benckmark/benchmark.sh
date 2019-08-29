@@ -45,11 +45,11 @@ work4="./workload/workload_4"
 work5="./workload/workload_5"
 # load data
 
-for i in 1 2 3 4 5
-do 
-	$1 load mysql -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i -p threadcount=128 >> bench.log &	
-done
-wait
+#for i in 1 2 3 4 5
+#do 
+#	$1 load mysql -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i -p threadcount=128 >> bench.log &	
+#done
+#wait
 
 while true
 do
