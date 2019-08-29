@@ -4,6 +4,12 @@ get_time(){
 	echo `expr $hours + $sce`
 }
 
+# run go-ycsb
+# $1 is begin time    $2 is end time
+# $3 is ./bin/go-ycsb $4 is the tidb addr $5 is the tidb port
+# $6 is the tablename $7 is the workload $8 is if only run one 
+# $9 is if need sleep 
+
 rungoycsb(){
 
 	da=`date +%Y%m%d`
@@ -15,16 +21,14 @@ rungoycsb(){
 
 	while [[ $[now] -gt $[begin] ]] && [[ $[now] -lt $[end] ]]
 	do
-		echo "begin load"	
-		$3 load tikv -p tikv.pd=$4 -p table=$5 -P $6
 		echo "begin run"
-		$3 run tikv -p tikv.pd=$4 -p table=$5 -P $6
+		$3 run mysql -p mysql.host=$4 -p mysql.port=$5 table=$6 -P $7 -P global.conf >> bench.log
 		echo "run end"
-		if [[ $7 = 1 ]]
+		if [[ $8 = 1 ]]
 		then 
-			if [[ $8 !=0 ]]
+			if [[ $9 !=0 ]]
 			then
-				sleep $8
+				sleep $9
 			fi
 			break 
 		fi
@@ -39,6 +43,13 @@ work2="./workload/workload_2"
 work3="./workload/workload_3"
 work4="./workload/workload_4"
 work5="./workload/workload_5"
+# load data
+
+for i in 1 2 3 4 5
+do 
+	$1 load mysql -P global.conf -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i >> banch.log &	
+done
+wait
 
 while true
 do
@@ -46,7 +57,7 @@ do
 	do  
 		begin=$(get_time 7 00)
 		end=$(get_time 10 0)
-		rungoycsb $begin $end $1 $2 "usertable"$i $work1 0 0 &
+		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work1 0 0 &
 	done 
 	wait
 
@@ -54,42 +65,42 @@ do
 	do 
 		begin=$(get_time 10 0)
 		end=$(get_time 11 30)	
-		rungoycsb $begin $end $1 $2 "usertable"$i $work3 1 0
+		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work3 1 0
 	done
 	
 	for i in 1 2 3 4 5
 	do 
 		begin=$(get_time 11 30)
 		end=$(get_time 14 0)	
-		rungoycsb $begin $end $1 $2 "usertable"$i $work2 0 0 &
+		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work2 0 0 &
 	done
 
 	for i in 1 2 3 4 5
 	do 
 		begin=$(get_time 14 0)
 		end=$(get_time 17 30)	
-		rungoycsb $begin $end $1 $2 "usertable"$i $work3 1 0
+		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work3 1 0
 	done
 
 	for i in 1 2 3 4 5
 	do 
 		begin=$(get_time 17 30)
 		end=$(get_time 23 0)	
-		rungoycsb $begin $end $1 $2 "usertable"$i $work4 0 0 &
+		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work4 0 0 &
 	done
 
 	for i in 1 2 3 4 5
 	do 
 		begin=$(get_time 23 0)
 		end=$(get_time 24 0)	
-		rungoycsb $begin $end $1 $2 "usertable"$i $work5 1 60 
+		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work5 1 60 
 	done
 
 	for i in 1 2 3 4 5
 	do 
 		begin=$(get_time 0 0)
 		end=$(get_time 7 0)	
-		rungoycsb $begin $end $1 $2 "usertable"$i $work5 1 60
+		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work5 1 60
 	done
 done
 echo "test end"
