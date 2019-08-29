@@ -47,7 +47,7 @@ work5="./workload/workload_5"
 
 for i in 1 2 3 4 5
 do 
-	$1 load mysql -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i >> banch.log &	
+	$1 load mysql -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i >> bench.log &	
 done
 wait
 
