@@ -22,7 +22,7 @@ rungoycsb(){
 	while [[ $[now] -gt $[begin] ]] && [[ $[now] -lt $[end] ]]
 	do
 		echo "begin run"
-		$3 run mysql -p mysql.host=$4 -p mysql.port=$5 table=$6 -P $7 -P global.conf >> bench.log
+		$3 run mysql -p mysql.host=$4 -p mysql.port=$5 table=$6 -P $7 >> bench.log
 		echo "run end"
 		if [[ $8 = 1 ]]
 		then 
@@ -47,7 +47,7 @@ work5="./workload/workload_5"
 
 for i in 1 2 3 4 5
 do 
-	$1 load mysql -P global.conf -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i >> banch.log &	
+	$1 load mysql -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i >> banch.log &	
 done
 wait
 
