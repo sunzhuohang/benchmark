@@ -26,7 +26,7 @@ rungoycsb(){
 		echo "run end"
 		if [[ $8 = 1 ]]
 		then 
-			if [[ $9 !=0 ]]
+			if [[ $9 != 0 ]]
 			then
 				sleep $9
 			fi
