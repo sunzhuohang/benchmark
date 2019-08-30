@@ -1,106 +1,136 @@
 get_time(){
-	hours=`expr $1 \* 3600`
-	sce=`expr $2 \* 60`
-	echo `expr $hours + $sce`
+		hours=`expr $1 \* 3600`
+		sce=`expr $2 \* 60`
+		t=`expr $hours + $sce`
+		da=`date +%Y%m%d`
+		tda=`date -d "$da" +%s`
+		echo `expr $t + $tda` 
 }
-
-# run go-ycsb
-# $1 is begin time    $2 is end time
-# $3 is ./bin/go-ycsb $4 is the tidb addr $5 is the tidb port
-# $6 is the tablename $7 is the workload $8 is if only run one 
-# $9 is if need sleep 
-
-rungoycsb(){
-
-	da=`date +%Y%m%d`
-	tda=`date -d "$da" +%s`
-	
-	begin=`expr $1 + $tda`
-	end=`expr $2 + $tda`
-	now=`date +%s`
-
-	while [[ $[now] -gt $[begin] ]] && [[ $[now] -lt $[end] ]]
-	do
-		echo "begin run"
-		$3 run mysql -p mysql.host=$4 -p mysql.port=$5 -p table=$6 -p threadcount=128 -P $7 >> bench.log
-		echo "run end"
-		if [[ $8 = 1 ]]
-		then 
-			if [[ $9 != 0 ]]
-			then
-				sleep $9
-			fi
-			break 
-		fi
-		now=`date +%s`
-	done
-}
-
 
 echo "begin test"
 work1="./workload/workload_1"
 work2="./workload/workload_2"
-work3="./workload/workload_3"
-work4="./workload/workload_4"
-work5="./workload/workload_5"
 # load data
 
 for i in 1 2 3 4 5
 do 
-	$1 load mysql -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i -p threadcount=128 >> bench.log &	
+		$1 load mysql -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i -p threadcount=128 >> bench.log &	
 done
 wait
 
+work_pid=0
+
 while true
 do
-	for i in 1 2 3 4 5
-	do  
-		begin=$(get_time 7 00)
-		end=$(get_time 10 0)
-		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work1 0 0 &
-	done 
-	wait
+	if [[ $[work_pid] != 0 ]]
+	then
+		$1 run mysql -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable" -p threadcount=128 >> bench.log &	
+		pid1=$!
+		sleep 120
+		kill -9 $work_pid
+		work_pid=$pid1
+	else 
+		$1 run mysql -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable" -p threadcount=128 >> bench.log &
+		work_pid=$i
+	fi	
 
-	for i in 1 2 3 4 5
-	do 
-		begin=$(get_time 10 0)
-		end=$(get_time 11 30)	
-		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work3 1 0
+	now=`date +%s` 
+	begin1=$(get_time 7 0)
+	end1=$(get_time 10 30)
+
+	while [[ $[now] -gt $[begin1] ]] && [[ $[now] -lt $[end1] ]]
+	do
+		for i in 1 2 3 4 5
+		do
+			$1 run mysql -P $work2 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i -p threadcount=128 >> bench.log &
+			sleep 300
+		done 
+		now=`date +%s`
+	done
+
+	begin2=$(get_time 10 30)
+	end2=$(get_time 14 0)
+
+	while [[ $[now] -gt $[begin2] ]] && [[ $[now] -lt $[end2] ]]
+	do
+		for i in 1 2 3 4 5
+		do	
+			$1 run mysql -P $work2 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i -p threadcount=258 >> bench.log &
+			sleep 150
+		done
+		
+		now=`date +%s`
+	done
+
+	if [[ $[work_pid] != 0 ]]
+	then
+		$1 run mysql -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable" -p threadcount=128 >> bench.log & 
+		pid1=$!
+		sleep 150
+		kill -9 $work_pid
+		work_pid=$pid1
+	fi   
+
+	now=`date +%s`
+	begin3=$(get_time 14 0)
+	end3=$(get_time 17 30)
+
+	while [[ $[now] -gt $[begin3] ]] && [[ $[now] -lt $[end3] ]]
+	do
+		for i in 1 2 3 4 5
+		do
+			$1 run mysql -P $work2 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i -p threadcount=258 >> bench.log &				
+			sleep 300
+		done
+		now=`date +%s`
+	done
+
+	begin4=$(get_time 17 30)
+	end4=$(get_time 21 30)
+
+	while [[ $[now] -gt $[begin4] ]] && [[ $[now] -lt $[end4] ]]
+	do                                      
+		for i in 1 2 3 4 5                                              
+		do                                                                          
+			$1 run mysql -P $work2 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i -p threadcount=258 >> bench.log &
+			sleep 100
+		done                                                                                                    
+		now=`date +%s`				
 	done
 	
-	for i in 1 2 3 4 5
-	do 
-		begin=$(get_time 11 30)
-		end=$(get_time 14 0)	
-		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work2 0 0 &
+	if [[ $[work_pid] != 0 ]]
+	then
+		$1 run mysql -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable" -p threadcount=128 >> bench.log &
+		pid1=$!
+		sleep 150
+		kill -9 work_pid
+		work_pid=$pid1
+	fi													    fi
+
+	begin5=$(get_time 21 30)
+	end5=$(get_time 24 0)
+	now=`date +%s`
+	while [[ $[now] -gt $[begin5] ]] && [[ $[now] -lt $[end5] ]]
+	do
+		for i in 1 2 3 4 5
+		do
+			$1 run mysql -P $work2 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i -p threadcount=258 >> bench.log &
+			sleep 450
+		done
+		now=`date +%s`
 	done
 
-	for i in 1 2 3 4 5
-	do 
-		begin=$(get_time 14 0)
-		end=$(get_time 17 30)	
-		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work3 1 0
-	done
-
-	for i in 1 2 3 4 5
-	do 
-		begin=$(get_time 17 30)
-		end=$(get_time 20 00)	
-		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work4 0 0 &
-	done
-
-	for i in 1 2 3 4 5
-	do 
-		begin=$(get_time 20 0)
-		end=$(get_time 24 0)	
-		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work5 0 0 
-	done
-
-	for i in 1 2 3 4 5
-	do 
-		begin=$(get_time 0 0)
-		end=$(get_time 7 0)	
-		rungoycsb $begin $end $1 $2 $3 "usertable"$i $work5 1 60
+	begin6=$(get_time 0 0)
+	end6=$(get_time 7 0)
+	now=`date +%s`
+	while [[ $[now] -gt $[begin5] ]] && [[ $[now] -lt $[end5] ]]
+	do
+		for i in 1 2 3 4 5
+		do
+			$1 run mysql -P $work2 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i -p threadcount=258 >> bench.log &
+			sleep 1000
+		done
+		now=`date +%s`
 	done
 done
 echo "test end"
