@@ -25,7 +25,7 @@ gobase(){
 	work_pid=0
 	while true
 	do
-		if [[ $pid !=0 ]]
+		if [[ $pid != 0 ]]
 		then 
 			$1 run mysql -P $2 -p mysql.host=$3 -p mysql.port=$4 -p table="usertable"$i -p threadcount=128 >> bench.log &
 			pid=$!
