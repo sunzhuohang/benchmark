@@ -37,7 +37,7 @@ func main(){
 func get_region() {
 	t := time.Now().Unix()
 	name := strconv.FormatInt(t,10)
-	resp,err := http.Get("http://10.233.28.217:2379/pd/api/v1/regions")
+	resp,err := http.Get("http://10.233.30.243:2379/pd/api/v1/regions")
 	defer resp.Body.Close()
 	if err != nil {
 		fmt.Println(err.Error())
