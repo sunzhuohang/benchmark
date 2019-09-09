@@ -14,8 +14,8 @@ rungoycsb(){
 	do
 		for i in 1 2 3 4 5
 		do
-			$3 run mysql -P $work -p mysql.host=$4 -p mysql.port=$5 -p table="usertable"$i -p threadcount=128 >> bench.log &
-			sleep $6
+			$3 run mysql -P $work -p mysql.host=$4 -p mysql.port=$5 -p table="usertable"$i -p threadcount=$6 >> bench.log &
+			sleep 180
 		done 
 		now=`date +%s`
 	done
@@ -23,17 +23,18 @@ rungoycsb(){
 
 gobase(){
 	work_pid=0
-	while true
+	i=1
+	while (( $i <=30 ))
 	do
 		if [[ $work_pid != 0 ]]
 		then 
-			$1 run mysql -P $2 -p mysql.host=$3 -p mysql.port=$4 -p table="usertable"$i -p threadcount=128 >> bench.log &
+			$1 run mysql -P $2 -p mysql.host=$3 -p mysql.port=$4 -p table="usertable"$i -p threadcount=24 >> bench.log &
 			pid=$!
 			sleep 300
 			kill -9 $work_pid
 			work_pid=pid
 		else 
-			$1 run mysql -P $2 -p mysql.host=$3 -p mysql.port=$4 -p table="usertable"$i -p threadcount=128 >> bench.log &
+			$1 run mysql -P $2 -p mysql.host=$3 -p mysql.port=$4 -p table="usertable"$i -p threadcount=24 >> bench.log &
 			work_pid=$!
 		fi
 		sleep $5
@@ -51,9 +52,10 @@ wait
 
 work_pid=0
 
+fg=0
 while true
 do
-	fg=0
+	
 	if [[ $fg = 0 ]]
 	then 
 		gobase $1 $work1 $2 $3 8000 &
@@ -64,34 +66,34 @@ do
 	begin1=$(get_time 7 0)
 	end1=$(get_time 10 30)
 
-	rungoycsb $begin1 $end1 $1 $2 $3 250
+	rungoycsb $begin1 $end1 $1 $2 $3 64
 
 	begin2=$(get_time 10 30)
 	end2=$(get_time 14 0)
 
-	rungoycsb $begin2 $end2 $1 $2 $3 150
+	rungoycsb $begin2 $end2 $1 $2 $3 128
 	
 	begin3=$(get_time 14 0)
 	end3=$(get_time 17 30)
 
-	rungoycsb $begin3 $end3 $1 $2 $3 300
-	
+	rungoycsb $begin3 $end3 $1 $2 $3 64
+
 	begin4=$(get_time 17 30)
 	end4=$(get_time 21 30)
 
-	rungoycsb $begin4 $end4 $1 $2 $3 200
+	rungoycsb $begin4 $end4 $1 $2 $3 96
 	
 
 	begin5=$(get_time 21 30)
 	end5=$(get_time 24 0)
 
-	rungoycsb $begin5 $end5 $1 $2 $3 300
+	rungoycsb $begin5 $end5 $1 $2 $3 32
 	
 
 	begin6=$(get_time 0 0)
 	end6=$(get_time 7 0)
 
-	rungoycsb $begin6 $end6 $1 $2 $3 600
+	rungoycsb $begin6 $end6 $1 $2 $3 16
 	
 done
 echo "test end"
