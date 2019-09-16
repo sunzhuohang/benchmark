@@ -1,96 +1,123 @@
 #！bin/bash
 get_time(){
-        hours=`expr $1 \* 3600`
-        sce=`expr $2 \* 60`
-        t=`expr $hours + $sce`
-        da=`date +%Y%m%d`
-        tda=`date -d "$da" +%s`
-        echo `expr $t + $tda`
+	hours=`expr $1 \* 3600`
+	sce=`expr $2 \* 60`
+	t=`expr $hours + $sce`
+	da=`date +%Y%m%d`
+	tda=`date -d "$da" +%s`
+	echo `expr $t + $tda`
 }
 
 rungoycsb(){
-        now=`date +%s`
-        work="./workload/workload_2"
-        while [[ $now -gt $1 && $now -lt $2 ]]
-        do
-                for i in 1 2 3 4 5
-                do
-                        $3 run mysql -P $work -p mysql.host=$4 -p mysql.port=$5 -p table="usertable"$i -p threadcount=$6 >> bench.log &
-                        now=`date +%s`
-                        if [[ $now -gt $2 ]]
-                        then
-                                return
-                        fi
-                        sleep $7
-                done
-                now=`date +%s`
-        done
+	now=`date +%s`
+	while [[ $now -gt $1 && $now -lt $2 ]]
+	do
+		echo $1 $now $2 $6 $7 >> zyh.log
+		$3 run mysql -P ./workload/workload_2 -p mysql.host=$4 -p mysql.port=$5 -p threadcount=$6 >> bench.log &
+		sleep $7
+		now=`date +%s`
+	done
 }
 
 gobase(){
-        work_pid=0
-        i=1
-        while (( $i <=30 ))
-        do
-                $1 run mysql -P $2 -p mysql.host=$3 -p mysql.port=$4 -p table="usertable"$i -p threadcount=12 >> bench.log
-                let "int++"
-        done
+	while true
+	do
+		$1 run mysql -P ./workload/workload_1 -p mysql.host=$2 -p mysql.port=$3 -p threadcount=12 >> bench.log
+	done
 }
 
 echo "begin test"
-work1="./workload/workload_1"
 
-#for i in 1 2 3 4 5
-#do
-#               $1 load mysql -P $work1 -p mysql.host=$2 -p mysql.port=$3 -p table="usertable"$i -p threadcount=128 >> bench.log &
-#done
-#wait
+gobase $1 $2 $3 &
 
-work_pid=0
-
-fg=0
+echo "begin while"
 while true
 do
-        if [[ $fg = 0 ]]
-        then
-                gobase $1 $work1 $2 $3 &
-                fg=1
-        fi
-# 0-6
-        begin=$(get_time 16 0)
-        end=$(get_time 22 0)
-        rungoycsb $begin $end $1 $2 $3 4 700
 
-# 6-8
-        begin1=$(get_time 22 0)
-        end1=$(get_time 24 0)
-        rungoycsb $begin1 $end1 $1 $2 $3 8 500
+echo " No1 0:00-8:00"
+# 4
+	begin=$(get_time 15 0)
+	end=$(get_time 17 0)
+	rungoycsb $begin $end $1 $2 $3 4 700
+# 8
+	begin=$(get_time 17 0)
+	end=$(get_time 18 0)
+	rungoycsb $begin $end $1 $2 $3 8 400
+# 16
+	begin=$(get_time 18 0)
+	end=$(get_time 19 0)
+	rungoycsb $begin $end $1 $2 $3 16 250
+# 32
+	begin=$(get_time 19 0)
+	end=$(get_time 21 0)
+	rungoycsb $begin $end $1 $2 $3 32 180
+# 16
+	begin=$(get_time 21 0)
+	end=$(get_time 22 0)
+	rungoycsb $begin $end $1 $2 $3 16 250
+# 8
+	begin=$(get_time 22 0)
+	end=$(get_time 23 0)
+	rungoycsb $begin $end $1 $2 $3 8 400
+#4
+	begin=$(get_time 23 0)
+	end=$(get_time 23 59)
+	rungoycsb $begin $end $1 $2 $3 4 700
 
-# 8-11:30
-        begin2=$(get_time 0 0)
-        end2=$(get_time 3 30)
-        rungoycsb $begin2 $end2 $1 $2 $3 16 350
+echo " No2 8:00-16:00"
+# 4
+	begin=$(get_time 0 0)
+	end=$(get_time 1 0)
+	rungoycsb $begin $end $1 $2 $3 4 700
+# 8
+	begin=$(get_time 1 0)
+	end=$(get_time 2 0)
+	rungoycsb $begin $end $1 $2 $3 8 400
+# 16
+	begin=$(get_time 2 0)
+	end=$(get_time 3 0)
+	rungoycsb $begin $end $1 $2 $3 16 250
+# 32
+	begin=$(get_time 3 0)
+	end=$(get_time 5 0)
+	rungoycsb $begin $end $1 $2 $3 32 180
+# 16
+	begin=$(get_time 5 0)
+	end=$(get_time 6 0)
+	rungoycsb $begin $end $1 $2 $3 16 250
+# 8
+	begin=$(get_time 6 0)
+	end=$(get_time 7 0)
+	rungoycsb $begin $end $1 $2 $3 8 400
+# 4
+	begin=$(get_time 7 0)
+	end=$(get_time 9 0)
+	rungoycsb $begin $end $1 $2 $3 4 700
 
-# 11:30-15:30
-        begin3=$(get_time 3 30)
-        end3=$(get_time 7 30)
-        rungoycsb $begin3 $end3 $1 $2 $3 32 250
+echo " No3 16:00-24:00"
 
-#15:30-18:30
-        begin4=$(get_time 7 30)
-        end4=$(get_time 10 30)
-        rungoycsb $begin4 $end4 $1 $2 $3 16 350
+# 8
+	begin=$(get_time 9 0)
+	end=$(get_time 10 0)
+	rungoycsb $begin $end $1 $2 $3 8 400
 
-#18:30-21:30
+# 16
+	begin=$(get_time 10 0)
+	end=$(get_time 11 0)
+	rungoycsb $begin $end $1 $2 $3 16 250
+# 32
+	begin=$(get_time 11 0)
+	end=$(get_time 13 0)
+	rungoycsb $begin $end $1 $2 $3 32 180
+# 16
+	begin=$(get_time 13 0)
+	end=$(get_time 14 0)
+	rungoycsb $begin $end $1 $2 $3 16 250
+# 8
+	begin=$(get_time 14 0)
+	end=$(get_time 15 0)
+	rungoycsb $begin $end $1 $2 $3 8 4000
 
-        begin5=$(get_time 10 30)
-        end5=$(get_time 13 30)
-        rungoycsb $begin5 $end5 $1 $2 $3 8 500
-
-#21:30-24:00
-        begin6=$(get_time 13 30)
-        end6=$(get_time 16 0)
-        rungoycsb $begin6 $end6 $1 $2 $3 4 700
-
+	echo " one over"
 done
 echo "test end"
